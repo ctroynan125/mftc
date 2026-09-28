@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages 图床 · 轻管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f5f7fc;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .app {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* 紫色渐变标题栏 */
+        .header {
+            background: linear-gradient(145deg, #8b5cf6, #6d28d9);
+            border-radius: 28px;
+            padding: 1.8rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            box-shadow: 0 15px 30px -10px rgba(109, 40, 217, 0.5);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 400;
+            backdrop-filter: blur(4px);
+        }
+
+        .token-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .token-area input {
+            padding: 12px 18px;
+            border-radius: 100px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(6px);
+            color: white;
+            font-size: 0.95rem;
+            width: 280px;
+            outline: 2px solid transparent;
+            transition: 0.2s;
+        }
+
+        .token-area input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .token-area input:focus {
+            outline: 2px solid white;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .token-area button {
+            background: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 100px;
+            font-weight: 600;
+            color: #6d28d9;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .token-area button:hover {
+            background: #f0eaff;
+            transform: scale(1.02);
+        }
+
+        /* 上传卡片 */
+        .upload-card {
+            background: white;
+            border-radius: 26px;
+            padding: 2rem;
+            box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            transition: 0.2s;
+        }
+
+        .drop-zone {
+            border: 3px dashed #d8caff;
+            background: #fbfaff;
+            border-radius: 20px;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .drop-zone.dragover {
+            background: #f0e9ff;
+            border-color: #8b5cf6;
+        }
+
+        .drop-zone p {
+            color: #4b3b7a;
+            font-size: 1.1rem;
+            margin: 10px 0;
+        }
+
+        .drop-zone small {
+            color: #8875b0;
+            display: block;
+        }
+
+        .file-list {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f5ff;
+            padding: 10px 16px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+        }
+
+        .file-item .progress {
+            font-weight: 600;
+            color: #8b5cf6;
+        }
+
+        .file-item .status {
+            font-size: 0.8rem;
+            padding: 3px 10px;
+            border-radius: 30px;
+            background: #e5dbff;
+            color: #4a2b8a;
+        }
+
+        .file-item .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .file-item .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* 工具栏 */
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .gallery-header h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #2e1b4a;
+        }
+
+        .refresh-btn {
+            background: white;
+            border: none;
+            padding: 12px 26px;
+            border-radius: 100px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+            color: #2e1b4a;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.95rem;
+            border: 1px solid #e5dbff;
+        }
+
+        .refresh-btn:hover {
+            background: #f5f0ff;
+            border-color: #b69eff;
+        }
+
+        /* 图库网格 */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: 0.2s;
+            border: 1px solid #f0eaff;
+        }
+
+        .card:hover {
+            box-shadow: 0 18px 32px -10px rgba(139, 92, 246, 0.2);
+        }
+
+        .media-preview {
+            height: 160px;
+            background: #faf7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-bottom: 1px solid #f0eaff;
+        }
+
+        .media-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .media-preview audio {
+            width: 90%;
+            height: 40px;
+        }
+
+        .card-body {
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+        }
+
+        .filename {
+            font-weight: 600;
+            color: #1f1235;
+            font-size: 0.95rem;
+            word-break: break-all;
+            line-height: 1.3;
+        }
+
+        .link-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .link-row input {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid #e2d6ff;
+            background: #fcfaff;
+            font-size: 0.75rem;
+            color: #3a2a5e;
+            outline: none;
+            transition: 0.1s;
+        }
+
+        .link-row input:focus {
+            border-color: #8b5cf6;
+            background: white;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .actions button {
+            flex: 1;
+            padding: 10px 0;
+            border-radius: 14px;
+            border: none;
+            font-weight: 500;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.1s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            background: #f5f0ff;
+            color: #3f2b6b;
+        }
+
+        .actions button.copy-btn {
+            background: #ede7ff;
+            color: #6d28d9;
+        }
+
+        .actions button.open-btn {
+            background: #e5dbff;
+            color: #4a2b8a;
+        }
+
+        .actions button.delete-btn {
+            background: #fee9e9;
+            color: #b91c1c;
+        }
+
+        .actions button:hover {
+            filter: brightness(0.95);
+            transform: scale(0.98);
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 3rem;
+            color: #8875b0;
+            background: white;
+            border-radius: 26px;
+            font-size: 1.1rem;
+            grid-column: 1 / -1;
+        }
+
+        /* toast */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: #2e1b4a;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 50px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem;
+            font-weight: 500;
+            animation: slideIn 0.25s ease;
+            max-width: 360px;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .refresh-btn .spinner {
+            width: 18px;
+            height: 18px;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <!-- 标题栏 & Token -->
+    <div class="header">
+        <h1>
+            📁 mftc 图床
+            <span>GitHub Pages</span>
+        </h1>
+        <div class="token-area">
+            <input type="password" id="tokenInput" placeholder="Personal Access Token (repo 权限)" autocomplete="off">
+            <button id="saveTokenBtn">保存 Token</button>
+        </div>
+    </div>
+
+    <!-- 上传区域 -->
+    <div class="upload-card">
+        <div class="drop-zone" id="dropZone">
+            <p>📤 点击选择文件 或 拖拽到此处</p>
+            <small>支持图片 (jpg, png, gif, webp, svg, bmp, ico) 与音频 (mp3, wav, m4a, ogg, flac, aac)</small>
+        </div>
+        <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp,.ico,.mp3,.wav,.m4a,.ogg,.flac,.aac" style="display: none;">
+        <div class="file-list" id="uploadProgressList"></div>
+    </div>
+
+    <!-- 图库 -->
+    <div class="gallery-header">
+        <h2>🖼️ 图库</h2>
+        <button class="refresh-btn" id="refreshGalleryBtn">
+            <span>⟳</span> 刷新图库
+        </button>
+    </div>
+    <div class="gallery-grid" id="galleryGrid">
+        <!-- 动态渲染 -->
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    // ==================== 配置 ====================
+    const GITHUB_USER = 'ctroynan125';
+    const REPO_NAME = 'mftc';
+    const BRANCH = 'main';
+    const BASE_URL = `https://${GITHUB_USER}.github.io/${REPO_NAME}/`;
+
+    // ==================== 全局状态 ====================
+    let token = localStorage.getItem('github_token') || '';
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const uploadProgressList = document.getElementById('uploadProgressList');
+    const galleryGrid = document.getElementById('galleryGrid');
+    const tokenInput = document.getElementById('tokenInput');
+    const saveTokenBtn = document.getElementById('saveTokenBtn');
+    const refreshGalleryBtn = document.getElementById('refreshGalleryBtn');
+
+    // 允许的扩展名
+    const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'];
+    const AUDIO_EXTS = ['mp3', 'wav', 'm4a', 'ogg', 'flac', 'aac'];
+
+    // ==================== 初始化 ====================
+    if (token) tokenInput.value = token;
+
+    // ==================== 工具函数 ====================
+    function showToast(message, isError = false) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        if (isError) toast.style.background = '#b91c1c';
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // 获取文件扩展名
+    function getExtension(filename) {
+        return filename.split('.').pop().toLowerCase();
+    }
+
+    // 判断是否为图片
+    function isImage(filename) {
+        const ext = getExtension(filename);
+        return IMAGE_EXTS.includes(ext);
+    }
+
+    // 判断是否为音频
+    function isAudio(filename) {
+        const ext = getExtension(filename);
+        return AUDIO_EXTS.includes(ext);
+    }
+
+    // 生成外链
+    function getPublicUrl(filename) {
+        return BASE_URL + encodeURIComponent(filename).replace(/%2F/g, '/');
+    }
+
+    // 保存token
+    saveTokenBtn.addEventListener('click', () => {
+        const newToken = tokenInput.value.trim();
+        if (!newToken) {
+            showToast('Token 不能为空', true);
+            return;
+        }
+        token = newToken;
+        localStorage.setItem('github_token', token);
+        showToast('Token 已保存');
+    });
+
+    // ==================== 上传逻辑 ====================
+    // 点击上传
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            handleFiles(e.target.files);
+            fileInput.value = ''; // 允许重复选择同一文件
+        }
+    });
+
+    // 拖拽
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            handleFiles(e.dataTransfer.files);
+        }
+    });
+
+    // 处理文件上传队列 (串行避免冲突)
+    async function handleFiles(files) {
+        if (!token) {
+            showToast('请先保存 Personal Access Token', true);
+            return;
+        }
+
+        const fileArray = Array.from(files).filter(file => {
+            const ext = getExtension(file.name);
+            return IMAGE_EXTS.includes(ext) || AUDIO_EXTS.includes(ext);
+        });
+
+        if (fileArray.length === 0) {
+            showToast('没有支持的文件格式 (图片/音频)', true);
+            return;
+        }
+
+        // 为每个文件创建一个进度条目
+        const entries = [];
+        fileArray.forEach(file => {
+            const itemId = 'file-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.id = itemId;
+            item.innerHTML = `
+                <span style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${file.name}</span>
+                <span class="status">等待中</span>
+            `;
+            uploadProgressList.appendChild(item);
+            entries.push({ file, itemId, element: item, statusEl: item.querySelector('.status') });
+        });
+
+        // 串行上传
+        for (const entry of entries) {
+            await uploadSingleFile(entry);
+        }
+    }
+
+    // 单个文件上传
+    async function uploadSingleFile({ file, itemId, element, statusEl }) {
+        return new Promise(async (resolve) => {
+            try {
+                // 更新状态
+                statusEl.textContent = '读取中...';
+                statusEl.className = 'status';
+
+                // 文件转 base64 (去掉前缀)
+                const base64 = await fileToBase64(file);
+                statusEl.textContent = '上传中...';
+
+                const filename = file.name;
+                const path = filename; // 直接放在根目录
+                const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${encodeURIComponent(path)}`;
+
+                const body = {
+                    message: `上传文件 ${filename}`,
+                    content: base64,
+                    branch: BRANCH
+                };
+
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.message || `HTTP ${response.status}`);
+                }
+
+                statusEl.textContent = '✅ 成功';
+                statusEl.className = 'status success';
+                element.style.background = '#e9f9ef';
+                showToast(`上传成功: ${filename}`);
+                // 刷新图库
+                await fetchGallery();
+            } catch (error) {
+                statusEl.textContent = '❌ 失败';
+                statusEl.className = 'status error';
+                element.style.background = '#ffe9e9';
+                showToast(`上传失败: ${file.name} - ${error.message}`, true);
+            } finally {
+                resolve();
+            }
+        });
+    }
+
+    // 文件转 base64 (不含 data: 前缀)
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const result = reader.result;
+                // 去掉 "data:image/png;base64," 部分
+                const base64 = result.split(',')[1];
+                if (!base64) reject(new Error('base64 转换失败'));
+                else resolve(base64);
+            };
+            reader.onerror = (error) => reject(error);
+        });
+    }
+
+    // ==================== 图库获取与渲染 ====================
+    async function fetchGallery() {
+        if (!token) {
+            galleryGrid.innerHTML = '<div class="empty-message">🔑 请先设置 Personal Access Token 以加载图库</div>';
+            return;
+        }
+
+        try {
+            // 显示加载状态
+            refreshGalleryBtn.innerHTML = '<span class="loading-spinner"></span> 加载中';
+            refreshGalleryBtn.disabled = true;
+
+            const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/?ref=${BRANCH}`;
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github+json'
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) throw new Error('Token 无效或权限不足');
+                if (response.status === 404) throw new Error('仓库不存在或分支错误');
+                throw new Error(`请求失败: ${response.status}`);
+            }
+
+            const data = await response.json();
+            // 过滤出文件 (type === 'file') 且符合图片/音频格式
+            const validFiles = data.filter(item => {
+                if (item.type !== 'file') return false;
+                const ext = getExtension(item.name);
+                return IMAGE_EXTS.includes(ext) || AUDIO_EXTS.includes(ext);
+            });
+
+            renderGallery(validFiles);
+        } catch (error) {
+            showToast(`加载图库失败: ${error.message}`, true);
+            galleryGrid.innerHTML = `<div class="empty-message">😵 加载失败: ${error.message}</div>`;
+        } finally {
+            refreshGalleryBtn.innerHTML = '<span>⟳</span> 刷新图库';
+            refreshGalleryBtn.disabled = false;
+        }
+    }
+
+    // 渲染卡片
+    function renderGallery(files) {
+        if (!files.length) {
+            galleryGrid.innerHTML = '<div class="empty-message">📭 还没有上传任何图片或音频</div>';
+            return;
+        }
+
+        galleryGrid.innerHTML = '';
+        files.forEach(file => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const filename = file.name;
+            const publicUrl = getPublicUrl(filename);
+            const ext = getExtension(filename);
+            const isImg = IMAGE_EXTS.includes(ext);
+            const isAud = AUDIO_EXTS.includes(ext);
+
+            // 媒体预览部分
+            let mediaHtml = '';
+            if (isImg) {
+                // 图片使用原始链接展示缩略图 (注意缓存问题可加时间戳, 但为避免刷新可使用原始地址)
+                mediaHtml = `<img src="${publicUrl}" alt="${filename}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%238b5cf6\' stroke-width=\'1\'%3E%3Crect x=\'2\' y=\'2\' width=\'20\' height=\'20\' rx=\'2\'/%3E%3Ccircle cx=\'9\' cy=\'9\' r=\'2\'/%3E%3Cpath d=\'m21 15-3-3-4 4-6-6-4 4\'/%3E%3C/svg%3E'">`;
+            } else if (isAud) {
+                mediaHtml = `<audio controls preload="none" src="${publicUrl}"></audio>`;
+            }
+
+            card.innerHTML = `
+                <div class="media-preview">
+                    ${mediaHtml}
+                </div>
+                <div class="card-body">
+                    <div class="filename" title="${filename}">${filename}</div>
+                    <div class="link-row">
+                        <input type="text" readonly value="${publicUrl}" id="link-${file.sha}">
+                    </div>
+                    <div class="actions">
+                        <button class="copy-btn" data-link="${publicUrl}">📋 复制</button>
+                        <button class="open-btn" data-link="${publicUrl}">🔗 打开</button>
+                        <button class="delete-btn" data-filename="${filename}" data-sha="${file.sha}">🗑️ 删除</button>
+                    </div>
+                </div>
+            `;
+
+            // 绑定事件
+            const copyBtn = card.querySelector('.copy-btn');
+            const openBtn = card.querySelector('.open-btn');
+            const deleteBtn = card.querySelector('.delete-btn');
+
+            copyBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                try {
+                    await navigator.clipboard.writeText(publicUrl);
+                    showToast('链接已复制');
+                } catch (err) {
+                    showToast('复制失败，请手动复制', true);
+                }
+            });
+
+            openBtn.addEventListener('click', () => {
+                window.open(publicUrl, '_blank');
+            });
+
+            deleteBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm(`确定要删除 ${filename} 吗？此操作不可恢复。`)) return;
+                await deleteFile(filename, file.sha, card);
+            });
+
+            galleryGrid.appendChild(card);
+        });
+    }
+
+    // 删除文件
+    async function deleteFile(filename, sha, cardElement) {
+        if (!token) {
+            showToast('无 Token，无法删除', true);
+            return;
+        }
+
+        try {
+            const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${encodeURIComponent(filename)}`;
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: `删除文件 ${filename}`,
+                    sha: sha,
+                    branch: BRANCH
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.message || '删除失败');
+            }
+
+            showToast(`已删除 ${filename}`);
+            // 移除卡片
+            cardElement.remove();
+            // 如果全部删完，显示空状态
+            if (galleryGrid.children.length === 0) {
+                galleryGrid.innerHTML = '<div class="empty-message">📭 还没有上传任何图片或音频</div>';
+            }
+        } catch (error) {
+            showToast(`删除失败: ${error.message}`, true);
+        }
+    }
+
+    // 刷新按钮
+    refreshGalleryBtn.addEventListener('click', fetchGallery);
+
+    // ==================== 启动时加载 ====================
+    window.addEventListener('load', () => {
+        if (token) {
+            fetchGallery();
+        } else {
+            galleryGrid.innerHTML = '<div class="empty-message">🔑 请先设置 Personal Access Token 以加载图库</div>';
+        }
+    });
+
+    // 如果token存在且页面已经加载完成 (防止load事件延迟)
+    if (document.readyState === 'complete') {
+        if (token) fetchGallery();
+        else galleryGrid.innerHTML = '<div class="empty-message">🔑 请先设置 Personal Access Token 以加载图库</div>';
+    } else {
+        window.addEventListener('load', () => {
+            if (token) fetchGallery();
+            else galleryGrid.innerHTML = '<div class="empty-message">🔑 请先设置 Personal Access Token 以加载图库</div>';
+        });
+    }
+</script>
+</body>
+</html>
